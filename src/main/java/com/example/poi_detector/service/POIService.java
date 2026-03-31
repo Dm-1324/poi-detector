@@ -22,25 +22,33 @@ public class POIService {
 
     public List<POIResponse> getNearbyPOIs(double lat, double lon) {
 
-        String query = buildQuery(lat, lon);
+        try {
+            System.out.println("📡 Calling Overpass API...");
+            System.out.println("📡 Calling Overpass API...");
 
-        // ✅ Proper headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_PLAIN);
+            String query = buildQuery(lat, lon);
 
-        HttpEntity<String> entity = new HttpEntity<>(query, headers);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_PLAIN);
 
-        // ✅ API call
-        Map response = restTemplate.postForObject(
-                OVERPASS_URL,
-                entity,
-                Map.class
-        );
+            HttpEntity<String> entity = new HttpEntity<>(query, headers);
 
-        // Debug (optional)
-        System.out.println("Overpass Response: " + response);
+            Map response = restTemplate.postForObject(
+                    OVERPASS_URL,
+                    entity,
+                    Map.class
+            );
 
-        return parseResponse(response);
+            System.out.println("✅ Overpass response received");
+
+            return parseResponse(response);
+
+        } catch (Exception e) {
+            System.out.println("❌ Overpass API FAILED: " + e.getMessage());
+
+            // IMPORTANT: Don't break app
+            return new ArrayList<>();
+        }
     }
 
     private String buildQuery(double lat, double lon) {

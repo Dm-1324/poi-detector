@@ -9,5 +9,7 @@ public interface UserPoiStateRepository extends JpaRepository<UserPoiState, Long
 
 //    Optional<UserPoiState> findByUserIdAndPoiId(String userId, String poiId);
 
-    boolean existsByUserIdAndPoiId(String userId, String poiId);
+//    boolean existsByUserIdAndPoiId(String userId, String poiId);
+
+    UserPoiState findByUserIdAndPoiId(String userId, String poiId);
 }

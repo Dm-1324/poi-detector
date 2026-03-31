@@ -16,7 +16,8 @@ public class UserPoiState {
 
     private String userId;
     private String poiId;
+    private String poiName;
     private boolean entered;
 
-    private LocalDateTime lastUpdated;
+    private LocalDateTime lastEnteredAt;
 }
