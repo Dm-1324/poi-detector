@@ -2,7 +2,7 @@ package com.example.poi_detector.util;
 
 public class DistanceUtil {
 
-    private static final double EARTH_RADIUS = 6371000; // meters
+    private static final double EARTH_RADIUS = 6371000;
 
     public static double calculateDistance(
             double lat1, double lon1,

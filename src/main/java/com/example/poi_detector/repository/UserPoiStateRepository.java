@@ -11,5 +11,5 @@ public interface UserPoiStateRepository extends JpaRepository<UserPoiState, Long
 
 //    boolean existsByUserIdAndPoiId(String userId, String poiId);
 
-    UserPoiState findByUserIdAndPoiId(String userId, String poiId);
+    UserPoiState findByUsernameAndPoiId(String username, String poiId);
 }

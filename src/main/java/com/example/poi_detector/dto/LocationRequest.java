@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class LocationRequest {
-    private String userId;
+    private String username;
     private double latitude;
     private double longitude;
 }

@@ -13,18 +13,19 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class POIService {
+public class POIServiceImpl implements POIService {
+
+    private static final String OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String OVERPASS_URL = "https://overpass-api.de/api/interpreter";
-
+    @Override
     public List<POIResponse> getNearbyPOIs(double lat, double lon) {
 
         try {
             System.out.println("📡 Calling Overpass API...");
-            System.out.println("📡 Calling Overpass API...");
+            System.out.println("Lat: " + lat + ", Lon: " + lon);
 
             String query = buildQuery(lat, lon);
 
@@ -45,12 +46,11 @@ public class POIService {
 
         } catch (Exception e) {
             System.out.println("❌ Overpass API FAILED: " + e.getMessage());
-
-            // IMPORTANT: Don't break app
             return new ArrayList<>();
         }
     }
 
+    // ✅ Restrict categories as per assignment
     private String buildQuery(double lat, double lon) {
 
         return "[out:json];(" +
@@ -65,10 +65,13 @@ public class POIService {
         List<POIResponse> pois = new ArrayList<>();
 
         if (response == null || response.get("elements") == null) {
-            return pois; // empty list
+            System.out.println("❌ Empty response from Overpass");
+            return pois;
         }
 
         List<Map> elements = (List<Map>) response.get("elements");
+
+        System.out.println("🔍 Parsing POIs: " + elements.size());
 
         for (Map element : elements) {
 
@@ -85,6 +88,8 @@ public class POIService {
             } else {
                 poi.setName("Unknown POI");
             }
+
+            System.out.println("➡️ Parsed POI: " + poi.getName());
 
             pois.add(poi);
         }

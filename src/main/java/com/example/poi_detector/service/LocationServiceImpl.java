@@ -15,7 +15,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class LocationService {
+public class LocationServiceImpl implements LocationService {
+
+    private static final double THRESHOLD = 150.0;
+    private static final long COOLDOWN_HOURS = 3;
 
     @Autowired
     private UserRepository userRepository;
@@ -26,24 +29,19 @@ public class LocationService {
     @Autowired
     private UserPoiStateRepository userPoiStateRepository;
 
-    private static final double THRESHOLD = 150.0; // meters
-    private static final long COOLDOWN_HOURS = 3;
-
+    @Override
     public String processLocation(LocationRequest request) {
 
         System.out.println("\n================ LOCATION UPDATE ================");
-        System.out.println("User: " + request.getUserId());
+        System.out.println("User: " + request.getUsername());
         System.out.println("Lat: " + request.getLatitude() + ", Lon: " + request.getLongitude());
 
-        // Step 1: User check
-        User user = userRepository.findById(request.getUserId()).orElse(null);
+        // ✅ Step 1: Validate user
+        User user = userRepository.findById(request.getUsername()).orElse(null);
 
         if (user == null) {
-            user = new User();
-            user.setId(request.getUserId());
-            user.setConsent(true);
-            userRepository.save(user);
-            System.out.println("🆕 New user created");
+            System.out.println("❌ Access Denied: User not found");
+            return "User not registered";
         }
 
         if (!user.isConsent()) {
@@ -51,7 +49,7 @@ public class LocationService {
             return "User has not given consent";
         }
 
-        // Step 2: Fetch POIs (handle Overpass failures)
+        // ✅ Step 2: Fetch POIs
         List<POIResponse> pois;
         try {
             pois = poiService.getNearbyPOIs(
@@ -70,7 +68,7 @@ public class LocationService {
 
         System.out.println("✅ POIs fetched: " + pois.size());
 
-        // Step 3: Find nearest POI within threshold
+        // ✅ Step 3: Find nearest POI
         POIResponse nearestPoi = null;
         double minDistance = Double.MAX_VALUE;
 
@@ -91,7 +89,6 @@ public class LocationService {
             }
         }
 
-        // No POI nearby
         if (nearestPoi == null) {
             System.out.println("❌ No POI within threshold");
             return "No new POI entry";
@@ -100,32 +97,31 @@ public class LocationService {
         System.out.println("🎯 Selected POI: " + nearestPoi.getName());
         System.out.println("📏 Distance: " + minDistance);
 
-        // Step 4: Use stable POI key
+        // ✅ Step 4: Cooldown logic
         String poiKey = nearestPoi.getUniqueKey();
 
-        UserPoiState existing =
-                userPoiStateRepository.findByUserIdAndPoiId(
-                        request.getUserId(),
-                        poiKey
-                );
+        UserPoiState existing = userPoiStateRepository.findByUsernameAndPoiId(
+                request.getUsername(),
+                poiKey
+        );
 
-        // CASE 1: First time visit
+        // 🆕 First time visit
         if (existing == null) {
-
             System.out.println("🆕 First time entry");
 
             UserPoiState state = new UserPoiState();
-            state.setUserId(request.getUserId());
+            state.setUsername(request.getUsername());
             state.setPoiId(poiKey);
             state.setPoiName(nearestPoi.getName());
             state.setLastEnteredAt(LocalDateTime.now());
+            state.setEntered(true);
 
             userPoiStateRepository.save(state);
 
             return "Welcome to " + nearestPoi.getName();
         }
 
-        // CASE 2: Cooldown check
+        // ⏱ Cooldown check
         LocalDateTime lastTime = existing.getLastEnteredAt();
         LocalDateTime now = LocalDateTime.now();
 
@@ -135,19 +131,18 @@ public class LocationService {
         System.out.println("⏱ Minutes passed: " + minutesPassed);
 
         if (minutesPassed >= (COOLDOWN_HOURS * 60)) {
-
             System.out.println("✅ Cooldown passed");
 
             existing.setLastEnteredAt(now);
             existing.setPoiName(nearestPoi.getName());
+            existing.setEntered(true);
+
             userPoiStateRepository.save(existing);
 
             return "Welcome to " + nearestPoi.getName();
         }
 
-        // Within cooldown
         System.out.println("⛔ Within cooldown → No notification");
-
         return "No new POI entry";
     }
 }
