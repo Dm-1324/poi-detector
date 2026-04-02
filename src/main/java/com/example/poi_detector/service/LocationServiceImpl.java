@@ -17,7 +17,7 @@ import java.util.List;
 @Service
 public class LocationServiceImpl implements LocationService {
 
-    private static final double THRESHOLD = 150.0;
+    private static final double THRESHOLD = 5.0;
     private static final long COOLDOWN_HOURS = 3;
 
     @Autowired

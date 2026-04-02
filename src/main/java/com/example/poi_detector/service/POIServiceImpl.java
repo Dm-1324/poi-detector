@@ -54,9 +54,9 @@ public class POIServiceImpl implements POIService {
     private String buildQuery(double lat, double lon) {
 
         return "[out:json];(" +
-                "node[\"amenity\"=\"restaurant\"](around:500," + lat + "," + lon + ");" +
-                "node[\"amenity\"=\"fuel\"](around:500," + lat + "," + lon + ");" +
-                "node[\"shop\"=\"mall\"](around:500," + lat + "," + lon + ");" +
+                "node[\"amenity\"=\"restaurant\"](around:150," + lat + "," + lon + ");" +
+                "node[\"amenity\"=\"fuel\"](around:150," + lat + "," + lon + ");" +
+                "node[\"shop\"=\"mall\"](around:150," + lat + "," + lon + ");" +
                 ");out;";
     }
 

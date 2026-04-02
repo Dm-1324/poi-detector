@@ -2,7 +2,9 @@ package com.example.poi_detector.controller;
 
 import com.example.poi_detector.dto.AuthRequest;
 import com.example.poi_detector.entity.User;
+import com.example.poi_detector.repository.UserPoiStateRepository;
 import com.example.poi_detector.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,8 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserPoiStateRepository userPoiStateRepository;
 
     @PostMapping("/register")
     public User register(@RequestBody AuthRequest request) {
@@ -33,10 +37,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Transactional
     public User login(@RequestBody AuthRequest request) {
         User user = userRepository.findById(request.getUsername()).orElse(null);
 
         if (user != null && passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            userPoiStateRepository.deleteByUsername(user.getUsername());
             return user;
         }
         throw new RuntimeException("Invalid credentials");
