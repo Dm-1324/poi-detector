@@ -56,6 +56,9 @@ public class LocationServiceImpl implements LocationService {
                     request.getLatitude(),
                     request.getLongitude()
             );
+        } catch (RuntimeException e) {
+            System.out.println("❌ Service error: " + e.getMessage());
+            return e.getMessage();
         } catch (Exception e) {
             System.out.println("❌ Overpass API failed: " + e.getMessage());
             return "POI service unavailable";
