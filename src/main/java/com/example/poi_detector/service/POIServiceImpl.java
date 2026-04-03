@@ -6,6 +6,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -44,15 +46,16 @@ public class POIServiceImpl implements POIService {
 
             return parseResponse(response);
 
+        } catch (ResourceAccessException | HttpStatusCodeException e) {
+            System.out.println("❌ Overpass Connection/Timeout Error: " + e.getMessage());
+            throw new RuntimeException("Overpass server not responding, please try again");
         } catch (Exception e) {
-            System.out.println("❌ Overpass API FAILED: " + e.getMessage());
-            return new ArrayList<>();
+            System.out.println("❌ Overpass General Failure: " + e.getMessage());
+            throw new RuntimeException("Overpass server not responding, please try again");
         }
     }
 
-
     private String buildQuery(double lat, double lon) {
-
         return "[out:json];(" +
                 "node[\"amenity\"=\"restaurant\"](around:150," + lat + "," + lon + ");" +
                 "node[\"amenity\"=\"fuel\"](around:150," + lat + "," + lon + ");" +
@@ -61,7 +64,6 @@ public class POIServiceImpl implements POIService {
     }
 
     private List<POIResponse> parseResponse(Map response) {
-
         List<POIResponse> pois = new ArrayList<>();
 
         if (response == null || response.get("elements") == null) {
@@ -70,19 +72,15 @@ public class POIServiceImpl implements POIService {
         }
 
         List<Map> elements = (List<Map>) response.get("elements");
-
         System.out.println("🔍 Parsing POIs: " + elements.size());
 
         for (Map element : elements) {
-
             POIResponse poi = new POIResponse();
-
             poi.setId(String.valueOf(element.get("id")));
             poi.setLatitude((Double) element.get("lat"));
             poi.setLongitude((Double) element.get("lon"));
 
             Map tags = (Map) element.get("tags");
-
             if (tags != null && tags.get("name") != null) {
                 poi.setName((String) tags.get("name"));
             } else {
@@ -90,10 +88,8 @@ public class POIServiceImpl implements POIService {
             }
 
             System.out.println("➡️ Parsed POI: " + poi.getName());
-
             pois.add(poi);
         }
-
         return pois;
     }
 }
