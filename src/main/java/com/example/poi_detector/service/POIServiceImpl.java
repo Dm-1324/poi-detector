@@ -50,7 +50,7 @@ public class POIServiceImpl implements POIService {
         }
     }
 
-    // ✅ Restrict categories as per assignment
+
     private String buildQuery(double lat, double lon) {
 
         return "[out:json];(" +

@@ -36,7 +36,7 @@ public class LocationServiceImpl implements LocationService {
         System.out.println("User: " + request.getUsername());
         System.out.println("Lat: " + request.getLatitude() + ", Lon: " + request.getLongitude());
 
-        // ✅ Step 1: Validate user
+
         User user = userRepository.findById(request.getUsername()).orElse(null);
 
         if (user == null) {
@@ -49,7 +49,7 @@ public class LocationServiceImpl implements LocationService {
             return "User has not given consent";
         }
 
-        // ✅ Step 2: Fetch POIs
+
         List<POIResponse> pois;
         try {
             pois = poiService.getNearbyPOIs(
@@ -68,7 +68,7 @@ public class LocationServiceImpl implements LocationService {
 
         System.out.println("✅ POIs fetched: " + pois.size());
 
-        // ✅ Step 3: Find nearest POI
+
         POIResponse nearestPoi = null;
         double minDistance = Double.MAX_VALUE;
 
@@ -97,7 +97,7 @@ public class LocationServiceImpl implements LocationService {
         System.out.println("🎯 Selected POI: " + nearestPoi.getName());
         System.out.println("📏 Distance: " + minDistance);
 
-        // ✅ Step 4: Cooldown logic
+
         String poiKey = nearestPoi.getUniqueKey();
 
         UserPoiState existing = userPoiStateRepository.findByUsernameAndPoiId(
@@ -105,7 +105,7 @@ public class LocationServiceImpl implements LocationService {
                 poiKey
         );
 
-        // 🆕 First time visit
+
         if (existing == null) {
             System.out.println("🆕 First time entry");
 
@@ -121,7 +121,7 @@ public class LocationServiceImpl implements LocationService {
             return "Welcome to " + nearestPoi.getName();
         }
 
-        // ⏱ Cooldown check
+
         LocalDateTime lastTime = existing.getLastEnteredAt();
         LocalDateTime now = LocalDateTime.now();
 
