@@ -57,40 +57,38 @@ public class POIServiceImpl implements POIService {
 
     private String buildQuery(double lat, double lon) {
         return "[out:json];(" +
-                "node[\"amenity\"=\"restaurant\"](around:150," + lat + "," + lon + ");" +
-                "node[\"amenity\"=\"fuel\"](around:150," + lat + "," + lon + ");" +
+                "node[\"amenity\"~\"restaurant|fuel\"](around:150," + lat + "," + lon + ");" +
+                "way[\"amenity\"~\"restaurant|fuel\"](around:150," + lat + "," + lon + ");" +
                 "node[\"shop\"=\"mall\"](around:150," + lat + "," + lon + ");" +
-                ");out;";
+                "way[\"shop\"=\"mall\"](around:150," + lat + "," + lon + ");" +
+                "relation[\"shop\"=\"mall\"](around:150," + lat + "," + lon + ");" +
+                ");out center;";
     }
 
     private List<POIResponse> parseResponse(Map response) {
         List<POIResponse> pois = new ArrayList<>();
-
-        if (response == null || response.get("elements") == null) {
-            System.out.println("❌ Empty response from Overpass");
-            return pois;
-        }
+        if (response == null || response.get("elements") == null) return pois;
 
         List<Map> elements = (List<Map>) response.get("elements");
-        System.out.println("🔍 Parsing POIs: " + elements.size());
 
         for (Map element : elements) {
             POIResponse poi = new POIResponse();
             poi.setId(String.valueOf(element.get("id")));
-            poi.setLatitude((Double) element.get("lat"));
-            poi.setLongitude((Double) element.get("lon"));
 
-            Map tags = (Map) element.get("tags");
-            if (tags != null && tags.get("name") != null) {
-                poi.setName((String) tags.get("name"));
-            } else {
-                poi.setName("Unknown POI");
+            if (element.containsKey("lat")) {
+                poi.setLatitude((Double) element.get("lat"));
+                poi.setLongitude((Double) element.get("lon"));
+            } else if (element.containsKey("center")) {
+                Map center = (Map) element.get("center");
+                poi.setLatitude((Double) center.get("lat"));
+                poi.setLongitude((Double) center.get("lon"));
             }
 
-            System.out.println("➡️ Parsed POI: " + poi.getName());
+            Map tags = (Map) element.get("tags");
+            poi.setName(tags != null && tags.get("name") != null ? (String) tags.get("name") : "Unknown POI");
+
             pois.add(poi);
         }
         return pois;
     }
-
 }
